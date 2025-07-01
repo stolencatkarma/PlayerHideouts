@@ -1,0 +1,12 @@
+name: Hideout
+main: com.yourorg.hideouts.HideoutPlugin
+version: 1.0.0
+api-version: '1.21'
+commands:
+  hideout:
+    description: Manage your private hideout.
+    usage: /<command> <create|warp|leave|delete>
+permissions:
+  hideout.use:
+    description: Allows using hideout commands
+    default: true
