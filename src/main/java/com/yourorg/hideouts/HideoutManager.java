@@ -48,21 +48,32 @@ public class HideoutManager {
     public void createHideout(Player p) throws IOException {
         UUID id = p.getUniqueId();
         String worldName = "hideout_" + id;
-        // Generate a random new world for this player
         long seed = new java.util.Random().nextLong();
         org.bukkit.WorldCreator wc = new org.bukkit.WorldCreator(worldName)
             .seed(seed)
             .environment(org.bukkit.World.Environment.NORMAL)
             .generateStructures(true);
-        org.bukkit.World w = Bukkit.createWorld(wc);
-        // Set a default world border around spawn
-        org.bukkit.WorldBorder border = w.getWorldBorder();
-        org.bukkit.Location spawn = w.getSpawnLocation();
-        border.setCenter(spawn.getX(), spawn.getZ());
-        border.setSize(1000);
-        cfg.set(id.toString(), worldName);
-        cfg.save(cfgFile);
-        p.teleport(w.getSpawnLocation());
+
+        // Use Paper's async world creation
+        wc.createWorldAsync(world -> {
+            if (world == null) {
+                p.sendMessage("§cFailed to create your hideout. Please try again later.");
+                return;
+            }
+            // Set a default world border around spawn
+            org.bukkit.WorldBorder border = world.getWorldBorder();
+            org.bukkit.Location spawn = world.getSpawnLocation();
+            border.setCenter(spawn.getX(), spawn.getZ());
+            border.setSize(1000);
+            cfg.set(id.toString(), worldName);
+            try {
+                cfg.save(cfgFile);
+            } catch (IOException e) {
+                p.sendMessage("§cFailed to save hideout config!");
+            }
+            p.teleport(world.getSpawnLocation());
+            p.sendMessage("§aYour hideout is ready!");
+        });
     }
 
     public void warpToHideout(Player p) {
