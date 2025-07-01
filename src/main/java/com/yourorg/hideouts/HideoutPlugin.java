@@ -14,6 +14,8 @@ public class HideoutPlugin extends JavaPlugin {
         hideoutManager = new HideoutManager(this);
         // Register command
         getCommand("hideout").setExecutor(new HideoutCommandExecutor(hideoutManager));
+        // Register world unload listener
+        getServer().getPluginManager().registerEvents(new HideoutWorldUnloadListener(hideoutManager), this);
         getLogger().info("HideoutPlugin enabled.");
     }
 

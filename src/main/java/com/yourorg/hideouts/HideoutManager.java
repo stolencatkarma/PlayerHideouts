@@ -17,6 +17,21 @@ import java.util.UUID;
 
 public class HideoutManager {
     /**
+     * Loads a player's hideout world if not already loaded.
+     * Returns the World object, or null if it could not be loaded.
+     */
+    public World loadHideoutWorld(UUID playerId) {
+        String worldName = cfg.getString(playerId.toString());
+        if (worldName == null) return null;
+        World w = Bukkit.getWorld(worldName);
+        if (w != null) return w;
+        // Try to load the world folder
+        File worldFolder = new File(plugin.getServer().getWorldContainer(), worldName);
+        if (!worldFolder.exists()) return null;
+        WorldCreator wc = new WorldCreator(worldName);
+        return Bukkit.createWorld(wc);
+    }
+    /**
      * Add a player to the hideout whitelist.
      */
     public boolean inviteToHideout(Player owner, UUID invitee) throws IOException {
@@ -133,6 +148,9 @@ public class HideoutManager {
     public void warpToHideout(Player p) {
         String worldName = cfg.getString(p.getUniqueId().toString());
         World w = Bukkit.getWorld(worldName);
+        if (w == null) {
+            w = loadHideoutWorld(p.getUniqueId());
+        }
         if (w != null) p.teleport(w.getSpawnLocation());
     }
 
@@ -145,6 +163,9 @@ public class HideoutManager {
     public boolean warpToHideout(UUID playerId, Player admin) {
         String worldName = cfg.getString(playerId.toString());
         World w = Bukkit.getWorld(worldName);
+        if (w == null) {
+            w = loadHideoutWorld(playerId);
+        }
         if (w != null) {
             admin.teleport(w.getSpawnLocation());
             return true;
