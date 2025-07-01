@@ -16,6 +16,60 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 public class HideoutManager {
+    /**
+     * Add a player to the hideout whitelist.
+     */
+    public boolean inviteToHideout(Player owner, UUID invitee) throws IOException {
+        String key = owner.getUniqueId().toString() + ".invited";
+        java.util.List<String> list = cfg.getStringList(key);
+        String inviteeStr = invitee.toString();
+        if (!list.contains(inviteeStr)) {
+            list.add(inviteeStr);
+            cfg.set(key, list);
+            cfg.save(cfgFile);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Remove a player from the hideout whitelist.
+     */
+    public boolean uninviteFromHideout(Player owner, UUID invitee) throws IOException {
+        String key = owner.getUniqueId().toString() + ".invited";
+        java.util.List<String> list = cfg.getStringList(key);
+        String inviteeStr = invitee.toString();
+        boolean removed = list.remove(inviteeStr);
+        if (removed) {
+            cfg.set(key, list);
+            cfg.save(cfgFile);
+        }
+        return removed;
+    }
+
+    /**
+     * Get the list of invited player UUIDs for a hideout owner.
+     */
+    public java.util.List<UUID> getInvitedPlayers(Player owner) {
+        String key = owner.getUniqueId().toString() + ".invited";
+        java.util.List<String> list = cfg.getStringList(key);
+        java.util.List<UUID> uuids = new java.util.ArrayList<>();
+        for (String s : list) {
+            try {
+                uuids.add(UUID.fromString(s));
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return uuids;
+    }
+
+    /**
+     * Check if a player is invited to another's hideout.
+     */
+    public boolean isInvited(Player owner, UUID player) {
+        String key = owner.getUniqueId().toString() + ".invited";
+        java.util.List<String> list = cfg.getStringList(key);
+        return list.contains(player.toString());
+    }
     private final JavaPlugin plugin;
     // Store the main world name at startup for leave logic
     private final String mainWorldName;
@@ -80,6 +134,46 @@ public class HideoutManager {
         String worldName = cfg.getString(p.getUniqueId().toString());
         World w = Bukkit.getWorld(worldName);
         if (w != null) p.teleport(w.getSpawnLocation());
+    }
+
+    /**
+     * Teleport an admin to another player's hideout.
+     * @param playerId The UUID of the player whose hideout to enter
+     * @param admin The admin to teleport
+     * @return true if successful, false if world not found
+     */
+    public boolean warpToHideout(UUID playerId, Player admin) {
+        String worldName = cfg.getString(playerId.toString());
+        World w = Bukkit.getWorld(worldName);
+        if (w != null) {
+            admin.teleport(w.getSpawnLocation());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get the World object for a player's hideout.
+     */
+    public World getHideoutWorld(UUID playerId) {
+        String worldName = cfg.getString(playerId.toString());
+        return Bukkit.getWorld(worldName);
+    }
+
+    /**
+     * Delete any player's hideout by UUID (admin version).
+     * @param playerId The UUID of the player whose hideout to delete
+     * @return true if deleted, false if not found
+     */
+    public boolean deleteHideout(UUID playerId) throws IOException {
+        String worldName = cfg.getString(playerId.toString());
+        if (worldName == null) return false;
+        Bukkit.unloadWorld(worldName, false);
+        File worldFolder = new File(plugin.getServer().getWorldContainer(), worldName);
+        org.apache.commons.io.FileUtils.deleteDirectory(worldFolder);
+        cfg.set(playerId.toString(), null);
+        cfg.save(cfgFile);
+        return true;
     }
 
     public void deleteHideout(Player p) throws IOException {
