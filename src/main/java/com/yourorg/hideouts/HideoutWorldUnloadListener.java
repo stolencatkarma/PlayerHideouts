@@ -27,7 +27,7 @@ public class HideoutWorldUnloadListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         World world = event.getPlayer().getWorld();
         // Delay to after quit so player is removed from world
-        Bukkit.getScheduler().runTaskLater(manager.plugin, () -> checkAndUnload(world), 1L);
+        Bukkit.getScheduler().runTaskLater(manager.getPlugin(), () -> checkAndUnload(world), 1L);
     }
 
     private void checkAndUnload(World world) {

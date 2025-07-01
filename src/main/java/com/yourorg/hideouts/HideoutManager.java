@@ -16,6 +16,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 public class HideoutManager {
+    public JavaPlugin getPlugin() {
+        return plugin;
+    }
     /**
      * Loads a player's hideout world if not already loaded.
      * Returns the World object, or null if it could not be loaded.
@@ -123,26 +126,25 @@ public class HideoutManager {
             .environment(org.bukkit.World.Environment.NORMAL)
             .generateStructures(true);
 
-        // Use Paper's async world creation
-        wc.createWorldAsync(world -> {
-            if (world == null) {
-                p.sendMessage("§cFailed to create your hideout. Please try again later.");
-                return;
-            }
-            // Set a default world border around spawn
-            org.bukkit.WorldBorder border = world.getWorldBorder();
-            org.bukkit.Location spawn = world.getSpawnLocation();
-            border.setCenter(spawn.getX(), spawn.getZ());
-            border.setSize(1000);
-            cfg.set(id.toString(), worldName);
-            try {
-                cfg.save(cfgFile);
-            } catch (IOException e) {
-                p.sendMessage("§cFailed to save hideout config!");
-            }
-            p.teleport(world.getSpawnLocation());
-            p.sendMessage("§aYour hideout is ready!");
-        });
+        // Synchronous world creation for compatibility
+        World world = Bukkit.createWorld(wc);
+        if (world == null) {
+            p.sendMessage("§cFailed to create your hideout. Please try again later.");
+            return;
+        }
+        // Set a default world border around spawn
+        org.bukkit.WorldBorder border = world.getWorldBorder();
+        org.bukkit.Location spawn = world.getSpawnLocation();
+        border.setCenter(spawn.getX(), spawn.getZ());
+        border.setSize(1000);
+        cfg.set(id.toString(), worldName);
+        try {
+            cfg.save(cfgFile);
+        } catch (IOException e) {
+            p.sendMessage("§cFailed to save hideout config!");
+        }
+        p.teleport(world.getSpawnLocation());
+        p.sendMessage("§aYour hideout is ready!");
     }
 
     public void warpToHideout(Player p) {

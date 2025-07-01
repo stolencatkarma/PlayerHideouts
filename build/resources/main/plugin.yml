@@ -5,8 +5,11 @@ api-version: '1.21'
 commands:
   hideout:
     description: Manage your private hideout.
-    usage: /<command> <create|warp|leave|delete>
+    usage: /<command> <create|warp|leave|delete|invite|uninvite|invited|admin>
 permissions:
   hideout.use:
     description: Allows using hideout commands
     default: true
+  hideout.admin:
+    description: Allows admin management of all hideouts
+    default: op
